@@ -12,13 +12,16 @@ The pipeline follows a layered architecture:
 raw → staging → marts
 (bronze → silver → gold)
 ```
+
+---
+
 ## 📦 Dataset
 
 This project uses the **Brazilian E-Commerce Public Dataset by Olist** from Kaggle.
 
 Dataset link: https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
 
-The dataset contains around 100,000 orders and includes information about customers, orders, order items, payments, reviews, products, sellers, and geolocation data. :contentReference[oaicite:0]{index=0}
+The dataset contains around 100,000 orders and includes information about customers, orders, order items, payments, reviews, products, sellers, and geolocation data.
 
 ---
 
@@ -30,6 +33,7 @@ The dataset contains around 100,000 orders and includes information about custom
 - dbt (data build tool)
 - Pandas
 - SQLAlchemy
+- psycopg2
 
 ---
 
@@ -74,7 +78,7 @@ project/
 ├── dbt_ecommerce/
 │   ├── models/
 │   │   ├── staging/             # Staging dbt models
-│   │   └── marts/               # Fact and dimension models
+│   │   └── marts/               # Fact, dimension, and KPI models
 │   └── dbt_project.yml
 │
 ├── docker-compose.yml
@@ -228,7 +232,25 @@ This model supports analysis such as:
 
 ---
 
-### 7. Data Quality Testing
+### 7. KPI Models
+
+Built business-level KPI models for analytics and reporting:
+
+```text
+sales_per_day
+revenue_by_category
+revenue_by_seller
+```
+
+These models help answer common business questions such as:
+
+- What is the daily revenue trend?
+- Which product categories generate the most revenue?
+- Which sellers generate the highest revenue?
+
+---
+
+### 8. Data Quality Testing
 
 Implemented dbt tests including:
 
@@ -336,12 +358,13 @@ pip install dbt-postgres
 - How to define fact table grain
 - How to apply dbt tests for data quality
 - Why `source()` and `ref()` are important for lineage and dependency tracking
+- How KPI models can turn warehouse data into business-ready insights
 
 ---
 
 ## 🧠 Personal Learnings
 
-Through this project, I gained hands-on experience building a complete data pipeline from scratch, including data ingestion, transformation, testing, and data modeling.
+Through this project, I gained hands-on experience building a complete data pipeline from scratch, including data ingestion, transformation, testing, data modeling, and KPI development.
 
 The most valuable learning was understanding how real-world data engineering systems are structured using layered architecture and how dbt helps enforce clean transformations, data quality, and maintainability.
 
@@ -353,10 +376,6 @@ Debugging environment issues such as Docker port conflicts, PostgreSQL authentic
 
 - Generate and review dbt documentation
 - Add screenshots of dbt lineage graph to the README
-- Build KPI models such as:
-  - sales per day
-  - revenue by category
-  - revenue by seller
 - Connect marts layer to Power BI
 - Integrate Airflow for orchestration:
   - Run ingestion script
