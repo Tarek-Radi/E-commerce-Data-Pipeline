@@ -13,5 +13,28 @@ services:
       - ./datasets:/data/raw
     restart: unless-stopped
 
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    container_name: airflow
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      DATA_PATH: /opt/datasets
+      DB_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/ecommerce_dw
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./dbt_ecommerce:/opt/dbt
+      - ./scripts:/opt/scripts
+      - ./datasets:/opt/datasets
+    ports:
+      - "8081:8080"
+    command: >
+      bash -c " rm -f /opt/airflow/airflow-webserver.pid && airflow db migrate && airflow users create --username admin --password admin --firstname admin --lastname admin --role Admin --email admin@email.com || true; airflow scheduler & exec airflow webserver "
+
 volumes:
   postgres_data:

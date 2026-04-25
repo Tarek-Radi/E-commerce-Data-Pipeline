@@ -1,0 +1,12 @@
+dbt_ecommerce:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: postgres
+      user: postgres
+      password: postgres
+      port: 5432
+      dbname: ecommerce_dw
+      schema: marts
+      threads: 1
