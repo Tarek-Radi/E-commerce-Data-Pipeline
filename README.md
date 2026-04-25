@@ -81,18 +81,16 @@ project/
 
 * Dockerized PostgreSQL
 * Configured database and schemas:
-
   * `raw`
   * `staging`
   * `marts`
 
 ### 3. Data Ingestion
 
-* Built Python script using:
-
+* Built Python ingestion script using:
   * Pandas
   * SQLAlchemy
-* Loaded CSV files into `raw` schema
+* Loaded CSV files into the `raw` schema
 
 ### 4. dbt Setup
 
@@ -100,18 +98,38 @@ project/
 * Connected dbt to PostgreSQL
 * Verified connection using `dbt debug`
 
+### 5. Data Transformation (dbt - Staging Layer)
+
+* Built staging models for all raw tables
+* Applied:
+  * Column selection
+  * Renaming conventions
+  * Data type casting (`timestamp`, `numeric`, `int`)
+* Used dbt `source()` for raw data references
+* Used dbt `ref()` for model dependencies
+
+### 6. Data Quality Testing
+
+* Implemented dbt tests:
+  * `not_null`
+  * `unique`
+* Validated key columns across staging models
+* Ensured important fields such as IDs and prices meet quality constraints
+
+---
+
 ## ⚠️ Challenges Faced
 
 ### ❌ 1. Docker & Port Conflicts
 
 * Issue: Connection was established to a different PostgreSQL instance running on the default port.
-* Fix: Changed exposed port from `5432` → `5433` to isolate the project environment.
+* Fix: Changed exposed port from `5432` to `5433` to isolate the project environment.
 
 ---
 
 ### ❌ 2. PostgreSQL Authentication Issue
 
-```
+```text
 password authentication failed for user "postgres"
 ```
 
@@ -135,9 +153,33 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install dbt-postgres
 ```
+### ❌ 4. Understanding dbt Concepts
+
+* Issue: Initial confusion between `source()` and `ref()`
+* Fix:
+  - `source()` → used for raw tables
+  - `ref()` → used for dbt models
+---
+
+### 5. Data Transformation (dbt - Staging Layer)
+
+- Built staging models for all raw tables
+- Applied:
+  - Column selection
+  - Renaming conventions
+  - Data type casting (timestamp, numeric, int)
+- Used dbt `source()` for raw data and `ref()` for model dependencies
+- Created a clean and consistent semantic layer
 
 ---
 
+### 6. Data Quality Testing
+
+- Implemented dbt tests:
+  - `not_null`
+  - `unique`
+- Validated data integrity across staging models
+- Ensured key columns (IDs, price, etc.) meet quality constraints
 
 ## 🧠 Key Learnings
 
@@ -151,13 +193,23 @@ pip install dbt-postgres
 
 ## 📊 Next Steps
 
-* Build staging models in dbt
-* Create fact & dimension tables
-* Add dbt tests (not_null, unique, relationships)
-* Generate dbt docs & lineage
-* Integrate Airflow
-
+- Build marts layer (fact & dimension tables)
+- Create main fact table (order_items)
+- Design star schema
+- Add advanced dbt tests:
+  - relationships
+  - accepted_values
+- Generate dbt documentation & lineage graph
+- Integrate Airflow for orchestration
 ---
+
+## 🧠 Personal Learnings
+
+Through this project, I gained hands-on experience in building a complete data pipeline from scratch, including data ingestion, transformation, and validation.
+
+The most valuable learning was understanding how real-world data engineering systems are structured using layered architecture (raw → staging → marts), and how tools like dbt help enforce data quality and maintainability.
+
+Debugging environment issues (Docker, PostgreSQL authentication, and dbt setup on Windows) was challenging but significantly improved my problem-solving skills and understanding of real production scenarios.
 
 ## 👨‍💻 Author
 
