@@ -1,30 +1,35 @@
-# 🛒 E-commerce Data Pipeline (dbt + Airflow)
+# 🛒 E-commerce Data Pipeline (PostgreSQL + dbt + Docker)
 
 ## 📌 Overview
 
-This project builds a modern data pipeline for an e-commerce dataset using:
+This project builds a modern data engineering pipeline for an e-commerce dataset using PostgreSQL, Python, Docker, and dbt.
 
-* PostgreSQL (Dockerized)
-* dbt (Data Transformation)
-* Python (Data Ingestion)
-* Docker (Environment Setup)
+The goal is to simulate a real-world data engineering workflow by ingesting raw CSV files into PostgreSQL, transforming them using dbt, applying data quality tests, and building an analytics-ready star schema.
 
 The pipeline follows a layered architecture:
 
-```
+```text
 raw → staging → marts
 (bronze → silver → gold)
 ```
+## 📦 Dataset
+
+This project uses the **Brazilian E-Commerce Public Dataset by Olist** from Kaggle.
+
+Dataset link: https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
+
+The dataset contains around 100,000 orders and includes information about customers, orders, order items, payments, reviews, products, sellers, and geolocation data. :contentReference[oaicite:0]{index=0}
 
 ---
 
 ## ⚙️ Tech Stack
 
-* Python
-* PostgreSQL
-* Docker & Docker Compose
-* dbt (data build tool)
-* Pandas & SQLAlchemy
+- Python
+- PostgreSQL
+- Docker & Docker Compose
+- dbt (data build tool)
+- Pandas
+- SQLAlchemy
 
 ---
 
@@ -32,39 +37,48 @@ raw → staging → marts
 
 ### 🔹 Raw Layer
 
-* Source data loaded from CSV files
-* Stored in PostgreSQL under `raw` schema
-* Loaded using Python ingestion script
+- Source CSV files are loaded into PostgreSQL
+- Data is stored under the `raw` schema
+- This layer keeps the data close to its original source format
+- Loaded using a Python ingestion script
 
-### 🔹 Staging Layer (dbt)
+### 🔹 Staging Layer
 
-* Data cleaning
-* Column renaming
-* Type casting
+- Built using dbt
+- One staging model per raw table
+- Responsible for:
+  - Column selection
+  - Column renaming
+  - Data type casting
+  - Basic cleanup and standardization
 
-### 🔹 Marts Layer (dbt)
+### 🔹 Marts Layer
 
-* Fact and dimension tables
-* Business-ready models
+- Built using dbt
+- Contains analytics-ready fact and dimension tables
+- Designed as a star schema for reporting and BI tools
 
 ---
 
 ## 📂 Project Structure
 
-```
+```text
 project/
 │
-├── datasets/              # raw CSV files (ignored in Git)
+├── datasets/                    # Raw CSV files (ignored in Git)
+│
 ├── scripts/
-│   └── load_raw_data.py   # ingestion script
+│   ├── data_exploration.ipynb   # Initial data exploration
+│   └── load_raw_data.py         # Python ingestion script
 │
 ├── dbt_ecommerce/
 │   ├── models/
-│   │   ├── staging/
-│   │   └── marts/
+│   │   ├── staging/             # Staging dbt models
+│   │   └── marts/               # Fact and dimension models
 │   └── dbt_project.yml
 │
 ├── docker-compose.yml
+├── README.md
 └── .gitignore
 ```
 
@@ -74,144 +88,283 @@ project/
 
 ### 1. Data Exploration
 
-* Analyzed dataset structure
-* Identified fact & dimension tables
+- Explored the dataset structure
+- Identified key entities and relationships
+- Classified tables into:
+  - Facts
+  - Dimensions
+  - Supporting facts
+- Defined the main business process: e-commerce sales analysis
+
+---
 
 ### 2. Environment Setup
 
-* Dockerized PostgreSQL
-* Configured database and schemas:
-  * `raw`
-  * `staging`
-  * `marts`
+- Set up PostgreSQL using Docker
+- Created database:
+
+```text
+ecommerce_dw
+```
+
+- Configured schemas:
+
+```text
+raw
+staging
+marts
+```
+
+---
 
 ### 3. Data Ingestion
 
-* Built Python ingestion script using:
-  * Pandas
-  * SQLAlchemy
-* Loaded CSV files into the `raw` schema
+- Built a Python ingestion script using:
+  - Pandas
+  - SQLAlchemy
+  - psycopg2
+- Loaded all CSV files into PostgreSQL under the `raw` schema
+
+Loaded raw tables:
+
+```text
+raw.customers
+raw.geolocation
+raw.order_items
+raw.order_payments
+raw.order_reviews
+raw.orders
+raw.product_category_translation
+raw.products
+raw.sellers
+```
+
+---
 
 ### 4. dbt Setup
 
-* Initialized dbt project
-* Connected dbt to PostgreSQL
-* Verified connection using `dbt debug`
+- Initialized a dbt project
+- Connected dbt to PostgreSQL
+- Verified the connection using:
 
-### 5. Data Transformation (dbt - Staging Layer)
+```bash
+dbt debug
+```
 
-* Built staging models for all raw tables
-* Applied:
-  * Column selection
-  * Renaming conventions
-  * Data type casting (`timestamp`, `numeric`, `int`)
-* Used dbt `source()` for raw data references
-* Used dbt `ref()` for model dependencies
+---
 
-### 6. Data Quality Testing
+### 5. Staging Layer
 
-* Implemented dbt tests:
-  * `not_null`
-  * `unique`
-* Validated key columns across staging models
-* Ensured important fields such as IDs and prices meet quality constraints
+Built staging models for all raw tables:
+
+```text
+stg_customers
+stg_geolocation
+stg_order_items
+stg_order_payments
+stg_order_reviews
+stg_orders
+stg_product_category_translation
+stg_products
+stg_sellers
+```
+
+Applied:
+
+- Column selection
+- Renaming conventions
+- Data type casting:
+  - `timestamp`
+  - `date`
+  - `numeric`
+  - `int`
+
+Used:
+
+- `source()` to reference raw tables
+- `ref()` to reference dbt models
+
+---
+
+### 6. Marts Layer
+
+Built analytics-ready fact and dimension tables.
+
+#### Dimensions
+
+```text
+dim_customers
+dim_products
+dim_sellers
+```
+
+#### Facts
+
+```text
+fct_order_items
+fct_payments
+fct_reviews
+```
+
+Main fact table:
+
+```text
+fct_order_items
+```
+
+Grain:
+
+```text
+One row per order item
+```
+
+This model supports analysis such as:
+
+- Revenue by product
+- Revenue by seller
+- Revenue by customer location
+- Delivery performance
+- Product category performance
+
+---
+
+### 7. Data Quality Testing
+
+Implemented dbt tests including:
+
+- `not_null`
+- `unique`
+- `relationships`
+
+Validated:
+
+- Primary keys in dimension tables
+- Required fields in fact tables
+- Relationships between facts and dimensions
+
+Example relationships tested:
+
+```text
+fct_order_items.customer_id → dim_customers.customer_id
+fct_order_items.product_id  → dim_products.product_id
+fct_order_items.seller_id   → dim_sellers.seller_id
+```
+
+---
+
+## ⭐ Star Schema
+
+The final marts layer follows a star schema design:
+
+```text
+              dim_customers
+                    |
+dim_products — fct_order_items — dim_sellers
+```
+
+Supporting facts:
+
+```text
+fct_payments
+fct_reviews
+```
+
+The star schema makes the data easier to query, analyze, and connect to BI tools such as Power BI.
 
 ---
 
 ## ⚠️ Challenges Faced
 
-### ❌ 1. Docker & Port Conflicts
+### 1. Docker & Port Conflicts
 
-* Issue: Connection was established to a different PostgreSQL instance running on the default port.
-* Fix: Changed exposed port from `5432` to `5433` to isolate the project environment.
+- Issue: Connection was established to a different PostgreSQL instance running on the default port.
+- Fix: Changed the exposed PostgreSQL port from `5432` to `5433` to isolate the project environment.
 
 ---
 
-### ❌ 2. PostgreSQL Authentication Issue
+### 2. PostgreSQL Authentication Issue
 
 ```text
 password authentication failed for user "postgres"
 ```
 
-* Cause: Docker volume persisted old credentials.
-* Fix:
-
-```bash
-docker compose down -v
-docker compose up -d
-```
+- Cause: Existing PostgreSQL credentials or cached Docker configuration caused a mismatch.
+- Fix: Isolated the project connection using a dedicated port and recreated the container.
 
 ---
 
-### ❌ 3. Environment & Dependency Management
+### 3. Environment & Dependency Management
 
-* Issue: dbt was not recognized due to environment and dependency conflicts (especially on Windows).
-* Fix: Created an isolated virtual environment to ensure clean dependency management.
+- Issue: dbt was not recognized due to environment and PATH issues on Windows.
+- Fix: Created an isolated virtual environment and installed dbt inside it.
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 pip install dbt-postgres
 ```
-### ❌ 4. Understanding dbt Concepts
-
-* Issue: Initial confusion between `source()` and `ref()`
-* Fix:
-  - `source()` → used for raw tables
-  - `ref()` → used for dbt models
----
-
-### 5. Data Transformation (dbt - Staging Layer)
-
-- Built staging models for all raw tables
-- Applied:
-  - Column selection
-  - Renaming conventions
-  - Data type casting (timestamp, numeric, int)
-- Used dbt `source()` for raw data and `ref()` for model dependencies
-- Created a clean and consistent semantic layer
 
 ---
 
-### 6. Data Quality Testing
+### 4. Understanding dbt Concepts
 
-- Implemented dbt tests:
-  - `not_null`
-  - `unique`
-- Validated data integrity across staging models
-- Ensured key columns (IDs, price, etc.) meet quality constraints
+- Issue: Initial confusion between `source()` and `ref()`
+- Fix:
+  - `source()` is used for raw source tables
+  - `ref()` is used for dbt models
+
+---
+
+### 5. Data Modeling Decisions
+
+- Issue: Deciding which tables should be facts, dimensions, or supporting facts.
+- Fix:
+  - Used grain analysis to define the main fact table
+  - Selected `fct_order_items` as the main fact because it represents product-level sales transactions
+  - Kept payments and reviews as separate supporting facts because they have different grains
+
+---
 
 ## 🧠 Key Learnings
 
-* Difference between ingestion (Python) vs transformation (dbt)
-* Importance of layered architecture
-* Docker volumes persist data across runs
-* Separation between raw and transformed data
-* Importance of environment isolation (venv)
+- Difference between ingestion and transformation
+- Difference between raw, staging, and marts layers
+- How to use Docker for a reproducible database environment
+- How Docker volumes can persist data and credentials
+- How to use dbt for transformation, testing, and documentation
+- How to design a star schema
+- How to define fact table grain
+- How to apply dbt tests for data quality
+- Why `source()` and `ref()` are important for lineage and dependency tracking
+
+---
+
+## 🧠 Personal Learnings
+
+Through this project, I gained hands-on experience building a complete data pipeline from scratch, including data ingestion, transformation, testing, and data modeling.
+
+The most valuable learning was understanding how real-world data engineering systems are structured using layered architecture and how dbt helps enforce clean transformations, data quality, and maintainability.
+
+Debugging environment issues such as Docker port conflicts, PostgreSQL authentication, and dbt setup on Windows improved my ability to troubleshoot real-world data engineering problems.
 
 ---
 
 ## 📊 Next Steps
 
-- Build marts layer (fact & dimension tables)
-- Create main fact table (order_items)
-- Design star schema
-- Add advanced dbt tests:
-  - relationships
-  - accepted_values
-- Generate dbt documentation & lineage graph
-- Integrate Airflow for orchestration
+- Generate and review dbt documentation
+- Add screenshots of dbt lineage graph to the README
+- Build KPI models such as:
+  - sales per day
+  - revenue by category
+  - revenue by seller
+- Connect marts layer to Power BI
+- Integrate Airflow for orchestration:
+  - Run ingestion script
+  - Run dbt models
+  - Run dbt tests
+
 ---
-
-## 🧠 Personal Learnings
-
-Through this project, I gained hands-on experience in building a complete data pipeline from scratch, including data ingestion, transformation, and validation.
-
-The most valuable learning was understanding how real-world data engineering systems are structured using layered architecture (raw → staging → marts), and how tools like dbt help enforce data quality and maintainability.
-
-Debugging environment issues (Docker, PostgreSQL authentication, and dbt setup on Windows) was challenging but significantly improved my problem-solving skills and understanding of real production scenarios.
 
 ## 👨‍💻 Author
 
 Tarek Mahmoud Abdelrady
-
