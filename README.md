@@ -1059,6 +1059,23 @@ Debugging environment issues such as Docker port conflicts, PostgreSQL authentic
 
 ---
 
+## ⚠️ License & Usage
+
+This repository is intended for **portfolio and demonstration purposes only**.
+
+You are allowed to:
+
+* View the code
+
+You are NOT allowed to:
+
+* Copy the code
+* Reuse the code in other projects
+* Modify or redistribute the code
+
+All rights reserved © Tarek Mahmoud Abdelrady
+
+
 ## 👨‍💻 Author
 
 Tarek Mahmoud Abdelrady
